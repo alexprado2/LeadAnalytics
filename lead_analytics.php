@@ -71,7 +71,7 @@ function lead_analytics_add_head_components()
 {
     $CI = &get_instance();
     $module_name = LEAD_ANALYTICS_MODULE_NAME;
-    $page = $CI->uri->segment(1);
+    $page = $CI->uri->segment(2);
 
     if ($page === 'lead_analytics') {
         echo '<link rel="stylesheet" type="text/css" href="' . module_dir_url($module_name, 'assets/css/lead_analytics.css') . '?v=' . time() . '">';
@@ -84,7 +84,7 @@ hooks()->add_action('app_admin_head', 'lead_analytics_add_head_components');
 function lead_analytics_add_footer_components(){
     $CI = & get_instance();
     $module_name = LEAD_ANALYTICS_MODULE_NAME;
-    $page = $CI->uri->segment(1);
+    $page = $CI->uri->segment(2);
 
     if ($page === 'lead_analytics') {
          echo '<script src="' . module_dir_url($module_name, 'assets/js/lead_analytics.js') . '?v=' . time() . '"></script>';

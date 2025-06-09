@@ -73,18 +73,36 @@ document.addEventListener('DOMContentLoaded', () => {
         }
 
         loadData() {
+            const postData = { ...this.filters };
+
+            // Adiciona o token de segurança CSRF que o Perfex exige
+            if (typeof csrfData !== 'undefined') {
+                postData[csrfData.token_name] = csrfData.hash;
+            }
+
             fetch(`${admin_url}lead_analytics/get_analytics_data`, {
                 method: 'POST',
                 headers: { 'Content-Type': 'application/json' },
-                body: JSON.stringify(this.filters)
+                body: JSON.stringify(postData) // Envia os filtros e o token
             })
-            .then(res => res.json())
+            .then(res => {
+                // Se a resposta do servidor não for bem-sucedida, mostra o erro
+                if (!res.ok) {
+                    return res.text().then(text => { throw new Error(text) });
+                }
+                // Se a resposta for OK, tenta converter para JSON
+                return res.json();
+            })
             .then(data => {
                 this.updateStats(data.stats);
                 this.updateAllCharts(data.charts);
                 this.updateTable(data.table_data);
             })
-            .catch(err => console.error('Error loading data:', err));
+            .catch(err => {
+                console.error('Error loading data:', err);
+                // Informa o usuário sobre o erro na própria tabela
+                document.getElementById('analytics-table-body').innerHTML = `<tr><td colspan="7" style="color: red; text-align: center;">Falha ao carregar os dados. Verifique o console do navegador (F12) para detalhes técnicos.</td></tr>`;
+            });
         }
 
         updateStats(stats) {

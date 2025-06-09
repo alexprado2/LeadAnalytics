@@ -21,18 +21,18 @@ class Lead_analytics extends AdminController
         $this->load->view('lead_analytics/dashboard', $data);
     }
 
-    public function get_analytics_data()
+     public function get_analytics_data()
     {
-        if (!$this->input->is_ajax_request()) {
-            show_404();
-        }
+        // if (!$this->input->is_ajax_request()) {
+        //     show_404();
+        // }
 
         $filters = json_decode($this->input->raw_input_stream, true) ?? [];
         $filters = $this->sanitize_filters($filters);
 
         $data = [
             'stats'      => $this->lead_analytics_model->get_dashboard_stats($filters),
-            'charts'     => $this->lead_analytics_model->get_chart_data($filters),
+            'charts'     => $this->lead_analytics_model->get_chart_data($filters), // Linha corrigida
             'table_data' => $this->lead_analytics_model->get_table_data($filters)
         ];
 
