@@ -86,8 +86,6 @@
 </div>
 <?php init_tail(); ?>
 <script>
-    // Pass admin_url to JS
-    const admin_url = "<?php echo admin_url(); ?>";
     // Function to check permission in JS
     function has_permission(feature, capability, user_id) {
         // This is a simplified check. For real security, rely on server-side checks.

@@ -1,6 +1,9 @@
 <?php
 /**
- * Lead Analytics Module for PerfexCRM
+ * Module Name: Lead Analytics
+ * Description: Análise avançada de leads com busca configurável e gráficos interativos.
+ * Version: 1.0.0
+ * Author: Alex Prado
  */
 
 defined('BASEPATH') or exit('No direct script access allowed');
@@ -28,7 +31,7 @@ function lead_analytics_init_menu_items()
         ]);
     }
 }
-add_action('admin_init', 'lead_analytics_init_menu_items');
+hooks()->add_action('admin_init', 'lead_analytics_init_menu_items');
 
 /**
  * Register activation and deactivation hooks
@@ -58,7 +61,7 @@ function lead_analytics_permissions()
     ];
     register_staff_capabilities('leads', $capabilities, _l('lead_analytics'));
 }
-add_action('staff_permissions', 'lead_analytics_permissions');
+hooks()->add_action('staff_permissions', 'lead_analytics_permissions');
 
 
 /**
@@ -72,10 +75,10 @@ function lead_analytics_add_head_components()
 
     if ($page === 'lead_analytics') {
         echo '<link rel="stylesheet" type="text/css" href="' . module_dir_url($module_name, 'assets/css/lead_analytics.css') . '?v=' . time() . '">';
-        echo '<script src="https://cdn.jsdelivr.net/npm/chart.js"></script>';
+        echo '<script src="' . module_dir_url($module_name, 'assets/libs/chart.min.js') . '"></script>';
     }
 }
-add_action('app_admin_head', 'lead_analytics_add_head_components');
+hooks()->add_action('app_admin_head', 'lead_analytics_add_head_components');
 
 
 function lead_analytics_add_footer_components(){
@@ -87,7 +90,7 @@ function lead_analytics_add_footer_components(){
          echo '<script src="' . module_dir_url($module_name, 'assets/js/lead_analytics.js') . '?v=' . time() . '"></script>';
     }
 }
-add_action('app_admin_footer', 'lead_analytics_add_footer_components');
+hooks()->add_action('app_admin_footer', 'lead_analytics_add_footer_components');
 
 /**
  * Load helper
