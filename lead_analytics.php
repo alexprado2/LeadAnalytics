@@ -75,7 +75,7 @@ function lead_analytics_add_head_components()
 
     if ($page === 'lead_analytics') {
         echo '<link rel="stylesheet" type="text/css" href="' . module_dir_url($module_name, 'assets/css/lead_analytics.css') . '?v=' . time() . '">';
-        echo '<script src="' . module_dir_url($module_name, 'assets/libs/chart.min.js') . '"></script>';
+       echo '<script type="module" src="' . module_dir_url($module_name, 'assets/libs/chart.min.js') . '"></script>';
     }
 }
 hooks()->add_action('app_admin_head', 'lead_analytics_add_head_components');

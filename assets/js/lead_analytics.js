@@ -73,24 +73,24 @@ document.addEventListener('DOMContentLoaded', () => {
         }
 
         loadData() {
-            const postData = { ...this.filters };
+            const postData = new FormData();
+            for (const key in this.filters) {
+                postData.append(key, this.filters[key]);
+            }
 
-            // Adiciona o token de segurança CSRF que o Perfex exige
+            // Adiciona o token CSRF
             if (typeof csrfData !== 'undefined') {
-                postData[csrfData.token_name] = csrfData.hash;
+                postData.append(csrfData.token_name, csrfData.hash);
             }
 
             fetch(`${admin_url}lead_analytics/get_analytics_data`, {
                 method: 'POST',
-                headers: { 'Content-Type': 'application/json' },
-                body: JSON.stringify(postData) // Envia os filtros e o token
+                body: postData
             })
             .then(res => {
-                // Se a resposta do servidor não for bem-sucedida, mostra o erro
                 if (!res.ok) {
                     return res.text().then(text => { throw new Error(text) });
                 }
-                // Se a resposta for OK, tenta converter para JSON
                 return res.json();
             })
             .then(data => {
@@ -100,7 +100,6 @@ document.addEventListener('DOMContentLoaded', () => {
             })
             .catch(err => {
                 console.error('Error loading data:', err);
-                // Informa o usuário sobre o erro na própria tabela
                 document.getElementById('analytics-table-body').innerHTML = `<tr><td colspan="7" style="color: red; text-align: center;">Falha ao carregar os dados. Verifique o console do navegador (F12) para detalhes técnicos.</td></tr>`;
             });
         }

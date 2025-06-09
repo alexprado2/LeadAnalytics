@@ -22,23 +22,24 @@ class Lead_analytics extends AdminController
     }
 
      public function get_analytics_data()
-    {
-        // if (!$this->input->is_ajax_request()) {
-        //     show_404();
-        // }
+{
+    // if (!$this->input->is_ajax_request()) {
+    //     show_404();
+    // }
 
-        $filters = json_decode($this->input->raw_input_stream, true) ?? [];
-        $filters = $this->sanitize_filters($filters);
+    // Altere esta linha
+    $filters = $this->input->post(); 
+    $filters = $this->sanitize_filters($filters);
 
-        $data = [
-            'stats'      => $this->lead_analytics_model->get_dashboard_stats($filters),
-            'charts'     => $this->lead_analytics_model->get_chart_data($filters), // Linha corrigida
-            'table_data' => $this->lead_analytics_model->get_table_data($filters)
-        ];
+    $data = [
+        'stats'      => $this->lead_analytics_model->get_dashboard_stats($filters),
+        'charts'     => $this->lead_analytics_model->get_chart_data($filters),
+        'table_data' => $this->lead_analytics_model->get_table_data($filters)
+    ];
 
-        header('Content-Type: application/json');
-        echo json_encode($data);
-    }
+    header('Content-Type: application/json');
+    echo json_encode($data);
+}
 
     public function export_pdf()
     {
