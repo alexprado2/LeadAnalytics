@@ -27,9 +27,9 @@ document.addEventListener('DOMContentLoaded', () => {
             document.getElementById('export-excel')?.addEventListener('click', () => this.export('excel'));
             document.getElementById('export-csv')?.addEventListener('click', () => this.export('csv'));
         }
-        
         initCharts() {
             this.charts.leads_by_status = this.createChart('leads_by_status', 'doughnut', 'Leads por Status');
+            this.charts.leads_funnel_chart = this.createFunnelChart('leads_funnel_chart', 'Funil de Leads');
             this.charts.leads_by_source = this.createChart('leads_by_source', 'bar', 'Leads por Fonte');
             this.charts.leads_timeline = this.createChart('leads_timeline', 'line', 'Timeline de Leads');
         }
@@ -44,6 +44,62 @@ document.addEventListener('DOMContentLoaded', () => {
                     responsive: true, 
                     maintainAspectRatio: false,
                     plugins: { legend: { display: type !== 'bar' } }
+                }
+            });
+        }
+
+        createFunnelChart(canvasId, label) {
+            const ctx = document.getElementById(canvasId)?.getContext('2d');
+            if (!ctx) return null;
+
+            return new Chart(ctx, {
+                type: 'bar', // Usamos um gráfico de barras
+                data: {
+                    labels: [],
+                    datasets: [{
+                        label: label,
+                        data: [],
+                        backgroundColor: [ // Cores para o funil
+                            'rgba(102, 126, 234, 0.8)',
+                            'rgba(118, 142, 238, 0.8)',
+                            'rgba(135, 157, 241, 0.8)',
+                            'rgba(159, 177, 245, 0.8)',
+                            'rgba(184, 195, 248, 0.8)',
+                            'rgba(210, 216, 251, 0.8)',
+                        ],
+                        borderColor: 'rgba(255, 255, 255, 0.3)',
+                        borderWidth: 1
+                    }]
+                },
+                options: {
+                    indexAxis: 'y', // ESSENCIAL: Transforma em gráfico de barras horizontal
+                    responsive: true,
+                    maintainAspectRatio: false,
+                    plugins: {
+                        legend: {
+                            display: false // Esconde a legenda para um visual mais limpo
+                        },
+                        tooltip: {
+                            callbacks: {
+                                label: function(context) {
+                                    return `${context.dataset.label}: ${context.raw}`;
+                                }
+                            }
+                        }
+                    },
+                    scales: {
+                        x: {
+                            beginAtZero: true,
+                            grid: {
+                                display: false // Esconde as linhas de grade do eixo X
+                            }
+                        },
+                        y: {
+                            grid: {
+                                display: false // Esconde as linhas de grade do eixo Y
+                            }
+                        }
+                    }
                 }
             });
         }
@@ -117,6 +173,7 @@ document.addEventListener('DOMContentLoaded', () => {
             this.updateChart(this.charts.leads_by_status, chartData.leads_by_status, ['#FF6384', '#36A2EB', '#FFCE56', '#4BC0C0', '#9966FF', '#FF9F40', '#E7E9ED']);
             this.updateChart(this.charts.leads_by_source, chartData.leads_by_source, '#667eea');
             this.updateChart(this.charts.leads_timeline, chartData.leads_timeline, '#764ba2');
+            this.updateChart(this.charts.leads_funnel_chart, chartData.leads_by_status);
         }
 
         updateChart(chart, data, backgroundColor) {

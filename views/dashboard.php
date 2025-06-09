@@ -30,10 +30,10 @@
                     <label for="assigned"><?php echo _l('search_assigned'); ?></label>
                     <select name="assigned" id="assigned" class="form-control selectpicker analytics-filter" data-live-search="true"><option value=""><?php echo _l('all'); ?></option><?php foreach($staff_members as $s){ echo "<option value='{$s['staffid']}'>{$s['full_name']}</option>"; } ?></select>
                 </div>
-                <div class="filter-group">
+                <!-- <div class="filter-group">
                     <label for="company"><?php echo _l('search_company'); ?></label>
                     <input type="text" name="company" id="company" class="form-control analytics-filter">
-                </div>
+                </div> -->
                 <div class="filter-group">
                     <label for="date_from"><?php echo _l('date_range_custom'); ?> (Início)</label>
                     <input type="date" name="date_from" id="date_from" class="form-control analytics-filter">
@@ -61,6 +61,10 @@
             <div class="chart-container">
                 <div class="chart-header"><h4 class="chart-title"><?php echo _l('default_chart_leads_status'); ?></h4></div>
                 <canvas id="leads_by_status" class="chart-canvas"></canvas>
+            </div>
+            <div class="chart-container" style="grid-column: 1 / -1;">
+                <div class="chart-header"><h4 class="chart-title">Leads por Status</h4></div>
+                <canvas id="leads_funnel_chart"></canvas>
             </div>
             <div class="chart-container">
                 <div class="chart-header"><h4 class="chart-title"><?php echo _l('default_chart_leads_source'); ?></h4></div>
