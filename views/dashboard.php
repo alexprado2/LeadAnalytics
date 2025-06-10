@@ -61,14 +61,14 @@
             <div class="chart-container">
                 <div class="chart-header"><h4 class="chart-title"><?php echo _l('default_chart_leads_status'); ?></h4></div>
                 <div id="leads_by_status"></div>
+            </div>q
+            <div class="chart-container">
+                <div class="chart-header"><h4 class="chart-title"><?php echo _l('default_chart_leads_source'); ?></h4></div>
+                <div id="leads_by_source"></div>
             </div>
             <div class="chart-container" style="grid-column: 1 / -1;">
                 <div class="chart-header"><h4 class="chart-title">Funil de Leads</h4></div>
                 <div id="leads_funnel_chart"></div>
-            </div>
-            <div class="chart-container">
-                <div class="chart-header"><h4 class="chart-title"><?php echo _l('default_chart_leads_source'); ?></h4></div>
-                <div id="leads_by_source"></div>
             </div>
             <div class="chart-container" style="grid-column: 1 / -1;">
                 <div class="chart-header"><h4 class="chart-title"><?php echo _l('default_chart_leads_monthly'); ?></h4></div>

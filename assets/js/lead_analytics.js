@@ -64,17 +64,24 @@ document.addEventListener('DOMContentLoaded', () => {
                 series: [{ name: 'Leads', data: [] }],
                 plotOptions: {
                     funnel: {
-                        distributed: true
+                        shape: 'pyramid', // <-- ESSA É A OPÇÃO PARA O FORMATO DE PIRÂMIDE
+                        distributed: true,
                     }
                 },
                 labels: [],
                 dataLabels: {
                     enabled: true,
                     formatter: function (val, opt) {
-                        return opt.w.globals.labels[opt.dataPointIndex] + ':  ' + val
+                        // Mostra o nome do status e o valor
+                        return opt.w.globals.labels[opt.dataPointIndex] + ':  ' + val;
                     },
+                    dropShadow: {
+                        enabled: true
+                    }
                 },
-                legend: { show: false }
+                legend: { 
+                    show: false // A legenda é redundante neste tipo de gráfico
+                }
             };
             this.charts.leads_funnel_chart = new ApexCharts(document.querySelector("#leads_funnel_chart"), funnelOptions);
             this.charts.leads_funnel_chart.render();
@@ -168,39 +175,75 @@ document.addEventListener('DOMContentLoaded', () => {
 
         updateAllCharts(chartData) {
             if (!chartData) return;
-            
-            // Atualiza Gráfico de Status (Rosca)
-            if (this.charts.leads_by_status && chartData.leads_by_status) {
-                this.charts.leads_by_status.updateOptions({
-                    series: chartData.leads_by_status.data,
-                    labels: chartData.leads_by_status.labels
-                });
-            }
-            
-            // Atualiza Gráfico de Funil
-            if (this.charts.leads_funnel_chart && chartData.leads_by_status) {
-                 this.charts.leads_funnel_chart.updateOptions({
-                    series: [{ data: chartData.leads_by_status.data }],
-                    labels: chartData.leads_by_status.labels
-                });
+
+            // A lógica para os dados de status agora é mais elaborada
+            if (chartData.leads_by_status) {
+                const statusData = chartData.leads_by_status;
+
+                // 1. Extrai os dados e rótulos REAIS do resultado
+                const realLabels = statusData.map(item => item.label);
+                const realData = statusData.map(item => parseInt(item.data, 10));
+
+                // 2. Atualiza o gráfico de Rosca (Doughnut) com os dados REAIS
+                if (this.charts.leads_by_status) {
+                    this.charts.leads_by_status.updateOptions({
+                        series: realData,
+                        labels: realLabels
+                    });
+                }
+
+                // 3. Lógica para o Funil com formato fixo
+                if (this.charts.leads_funnel_chart) {
+                    // 3a. Gera dados "FALSOS" para criar a forma de pirâmide perfeita
+                    // Ex: [100, 85, 70, 55, 40]
+                    const fakeShapeData = [];
+                    const totalSteps = realLabels.length > 0 ? realLabels.length : 1;
+                    for (let i = 0; i < totalSteps; i++) {
+                        // Cria uma sequência descendente para a forma do funil
+                        const value = 100 - (i * (80 / totalSteps));
+                        fakeShapeData.push(value);
+                    }
+
+                    // 3b. Atualiza o gráfico de funil
+                    this.charts.leads_funnel_chart.updateOptions({
+                        // Usa os dados FALSOS para desenhar a forma
+                        series: [{
+                            data: fakeShapeData
+                        }],
+                        // Usa os rótulos REAIS
+                        xaxis: {
+                            categories: realLabels
+                        },
+                        // Usa o formatador para mostrar os dados REAIS nos rótulos
+                        dataLabels: {
+                            formatter: function(val, opt) {
+                                const seriesIndex = opt.seriesIndex;
+                                const dataPointIndex = opt.dataPointIndex;
+                                const originalValue = realData[dataPointIndex]; // Pega o valor real
+
+                                // Retorna o rótulo com o valor real
+                                return realLabels[dataPointIndex] + ':  ' + originalValue;
+                            }
+                        }
+                    });
+                }
             }
 
-            // Atualiza Gráfico de Fonte (Barras)
-            if (this.charts.leads_by_source && chartData.leads_by_source) {
-                this.charts.leads_by_source.updateOptions({
-                    series: [{ data: chartData.leads_by_source.data }],
-                    xaxis: { categories: chartData.leads_by_source.labels }
-                });
-            }
-            
-            // Atualiza Gráfico de Timeline (Linha)
-            if (this.charts.leads_timeline && chartData.leads_timeline) {
-                this.charts.leads_timeline.updateOptions({
-                    series: [{ data: chartData.leads_timeline.data }],
-                    xaxis: { categories: chartData.leads_timeline.labels }
-                });
-            }
-        }
+    // A lógica para os outros gráficos permanece a mesma
+    if (this.charts.leads_by_source && chartData.leads_by_source) {
+        this.charts.leads_by_source.updateOptions({
+            series: [{ data: chartData.leads_by_source.data }],
+            xaxis: { categories: chartData.leads_by_source.labels }
+        });
+    }
+    
+    if (this.charts.leads_timeline && chartData.leads_timeline) {
+        this.charts.leads_timeline.updateOptions({
+            series: [{ data: chartData.leads_timeline.data }],
+            xaxis: { categories: chartData.leads_timeline.labels }
+        });
+    }
+}
         
         updateTable(tableData) {
             const tbody = document.getElementById('analytics-table-body');
