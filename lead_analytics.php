@@ -2,19 +2,16 @@
 /**
  * Module Name: Lead Analytics
  * Description: Análise avançada de leads com busca configurável e gráficos interativos.
- * Version: 1.0.0
+ * Version: 1.1.0
  * Author: Alex Prado
  */
-
 defined('BASEPATH') or exit('No direct script access allowed');
 
 define('LEAD_ANALYTICS_MODULE_NAME', 'lead_analytics');
-
 /**
  * Register language files
  */
 register_language_files(LEAD_ANALYTICS_MODULE_NAME, [LEAD_ANALYTICS_MODULE_NAME]);
-
 /**
  * Init module menu items
  */
@@ -32,7 +29,6 @@ function lead_analytics_init_menu_items()
     }
 }
 hooks()->add_action('admin_init', 'lead_analytics_init_menu_items');
-
 /**
  * Register activation and deactivation hooks
  */
@@ -62,8 +58,6 @@ function lead_analytics_permissions()
     register_staff_capabilities('leads', $capabilities, _l('lead_analytics'));
 }
 hooks()->add_action('staff_permissions', 'lead_analytics_permissions');
-
-
 /**
  * Add CSS and JS assets
  */
@@ -75,12 +69,13 @@ function lead_analytics_add_head_components()
 
     if ($page === 'lead_analytics') {
         echo '<link rel="stylesheet" type="text/css" href="' . module_dir_url($module_name, 'assets/css/lead_analytics.css') . '?v=' . time() . '">';
-       echo '<script type="module" src="' . module_dir_url($module_name, 'assets/libs/chart.min.js') . '"></script>';
+        echo '<script src="' . module_dir_url($module_name, 'assets/libs/apexcharts.min.js') . '"></script>';
     }
 }
 hooks()->add_action('app_admin_head', 'lead_analytics_add_head_components');
-
-
+/**
+ * Add JS assets to the footer
+ */
 function lead_analytics_add_footer_components(){
     $CI = & get_instance();
     $module_name = LEAD_ANALYTICS_MODULE_NAME;
@@ -91,7 +86,6 @@ function lead_analytics_add_footer_components(){
     }
 }
 hooks()->add_action('app_admin_footer', 'lead_analytics_add_footer_components');
-
 /**
  * Load helper
  */
