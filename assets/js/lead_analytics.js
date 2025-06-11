@@ -1,9 +1,9 @@
 /**
- * Lead Analytics JavaScript
+ * Lead Analytics JavaScript com ApexCharts
  */
 document.addEventListener('DOMContentLoaded', () => {
-    if (typeof Chart === 'undefined') {
-        console.error('Chart.js is not loaded.');
+    if (typeof ApexCharts === 'undefined') {
+        console.error('ApexCharts is not loaded.');
         return;
     }
 
@@ -26,90 +26,134 @@ document.addEventListener('DOMContentLoaded', () => {
             document.getElementById('export-pdf')?.addEventListener('click', () => this.export('pdf'));
             document.getElementById('export-excel')?.addEventListener('click', () => this.export('excel'));
             document.getElementById('export-csv')?.addEventListener('click', () => this.export('csv'));
+           document.getElementById('apply-limit')?.addEventListener('click', () => this.loadTableDataOnly());
         }
+
         initCharts() {
-            this.charts.leads_by_status = this.createChart('leads_by_status', 'doughnut', 'Leads por Status');
-            this.charts.leads_funnel_chart = this.createFunnelChart('leads_funnel_chart', 'Funil de Leads');
-            this.charts.leads_by_source = this.createChart('leads_by_source', 'bar', 'Leads por Fonte');
-            this.charts.leads_timeline = this.createChart('leads_timeline', 'line', 'Timeline de Leads');
-        }
-
-        createChart(canvasId, type, label) {
-            const ctx = document.getElementById(canvasId)?.getContext('2d');
-            if (!ctx) return null;
-            return new Chart(ctx, {
-                type: type,
-                data: { labels: [], datasets: [{ label, data: [] }] },
-                options: { 
-                    responsive: true, 
-                    maintainAspectRatio: false,
-                    plugins: { legend: { display: type !== 'bar' } }
-                }
-            });
-        }
-
-        createFunnelChart(canvasId, label) {
-            const ctx = document.getElementById(canvasId)?.getContext('2d');
-            if (!ctx) return null;
-
-            return new Chart(ctx, {
-                type: 'bar', // Usamos um gráfico de barras
-                data: {
-                    labels: [],
-                    datasets: [{
-                        label: label,
-                        data: [],
-                        backgroundColor: [ // Cores para o funil
-                            'rgba(102, 126, 234, 0.8)',
-                            'rgba(118, 142, 238, 0.8)',
-                            'rgba(135, 157, 241, 0.8)',
-                            'rgba(159, 177, 245, 0.8)',
-                            'rgba(184, 195, 248, 0.8)',
-                            'rgba(210, 216, 251, 0.8)',
-                        ],
-                        borderColor: 'rgba(255, 255, 255, 0.3)',
-                        borderWidth: 1
-                    }]
+            // Opções padrão para todos os gráficos para manter a consistência
+            const defaultOptions = {
+                chart: {
+                    height: 350,
+                    toolbar: { show: true },
+                    fontFamily: 'inherit',
                 },
-                options: {
-                    indexAxis: 'y', // ESSENCIAL: Transforma em gráfico de barras horizontal
-                    responsive: true,
-                    maintainAspectRatio: false,
-                    plugins: {
-                        legend: {
-                            display: false // Esconde a legenda para um visual mais limpo
-                        },
-                        tooltip: {
-                            callbacks: {
-                                label: function(context) {
-                                    return `${context.dataset.label}: ${context.raw}`;
-                                }
-                            }
-                        }
-                    },
-                    scales: {
-                        x: {
-                            beginAtZero: true,
-                            grid: {
-                                display: false // Esconde as linhas de grade do eixo X
-                            }
-                        },
-                        y: {
-                            grid: {
-                                display: false // Esconde as linhas de grade do eixo Y
-                            }
-                        }
+                dataLabels: { enabled: true },
+                legend: { show: true, position: 'bottom' }
+            };
+
+            // Gráfico de Status (Rosca/Doughnut)
+            const statusOptions = {
+                ...defaultOptions,
+                chart: { ...defaultOptions.chart, type: 'donut' },
+                series: [],
+                labels: [],
+                responsive: [{
+                    breakpoint: 480,
+                    options: {
+                        chart: { width: '100%' },
+                        legend: { position: 'bottom' }
                     }
+                }]
+            };
+            this.charts.leads_by_status = new ApexCharts(document.querySelector("#leads_by_status"), statusOptions);
+            this.charts.leads_by_status.render();
+
+            // Gráfico de Funil
+            const funnelOptions = {
+                 ...defaultOptions,
+                chart: { ...defaultOptions.chart, type: 'funnel' },
+                series: [{ name: 'Leads', data: [] }],
+                plotOptions: {
+                    funnel: {
+                        shape: 'pyramid', // <-- ESSA É A OPÇÃO PARA O FORMATO DE PIRÂMIDE
+                        distributed: true,
+                    }
+                },
+                labels: [],
+                dataLabels: {
+                    enabled: true,
+                    formatter: function (val, opt) {
+                        // Mostra o nome do status e o valor
+                        return opt.w.globals.labels[opt.dataPointIndex] + ':  ' + val;
+                    },
+                    dropShadow: {
+                        enabled: true
+                    }
+                },
+                legend: { 
+                    show: false // A legenda é redundante neste tipo de gráfico
                 }
-            });
+            };
+            this.charts.leads_funnel_chart = new ApexCharts(document.querySelector("#leads_funnel_chart"), funnelOptions);
+            this.charts.leads_funnel_chart.render();
+
+            // Gráfico de Fonte (Barras)
+            const sourceOptions = {
+                ...defaultOptions,
+                chart: { ...defaultOptions.chart, type: 'bar' },
+                series: [{ name: 'Total de Leads', data: [] }],
+                xaxis: { categories: [] },
+                plotOptions: { bar: { horizontal: true, distributed: true } },
+                legend: { show: false }
+            };
+            this.charts.leads_by_source = new ApexCharts(document.querySelector("#leads_by_source"), sourceOptions);
+            this.charts.leads_by_source.render();
+
+            // Gráfico de Timeline (Linha)
+            const timelineOptions = {
+                ...defaultOptions,
+                chart: { ...defaultOptions.chart, type: 'line', zoom: { enabled: false } },
+                series: [{ name: 'Novos Leads', data: [] }],
+                xaxis: { type: 'category', categories: [] },
+                stroke: { curve: 'smooth' }
+            };
+            this.charts.leads_timeline = new ApexCharts(document.querySelector("#leads_timeline"), timelineOptions);
+            this.charts.leads_timeline.render();
         }
         
         collectFilters() {
-            this.filters = {};
-            document.querySelectorAll('.analytics-filter').forEach(el => {
-                if (el.value) this.filters[el.name] = el.value;
-            });
-        }
+                this.filters = {};
+                // Usando jQuery para ser mais compatível com a biblioteca selectpicker
+                $('.analytics-filter').each((index, el) => {
+                    // Usar $(el).val() é mais confiável para ler o valor de um selectpicker
+                    const value = $(el).val(); 
+                    if (value && value !== '') {
+                        this.filters[el.name] = Array.isArray(value) ? value.join(',') : value;
+                    }
+                });
+            }
+
+            loadTableDataOnly() {
+                this.collectFilters(); // Coleta todos os filtros atuais, incluindo o novo limite
+
+                const postData = new FormData();
+                for (const key in this.filters) {
+                    postData.append(key, this.filters[key]);
+                }
+
+                if (typeof csrfData !== 'undefined') {
+                    postData.append(csrfData.token_name, csrfData.hash);
+                }
+
+                fetch(`${admin_url}lead_analytics/get_analytics_data`, {
+                    method: 'POST',
+                    body: postData
+                })
+                .then(res => {
+                    if (!res.ok) {
+                        return res.text().then(text => { throw new Error(text) });
+                    }
+                    return res.json();
+                })
+                .then(data => {
+                    // A diferença chave está aqui: apenas a tabela é atualizada
+                    this.updateTable(data.table_data);
+                })
+                .catch(err => {
+                    console.error('Error loading table data:', err);
+                    document.getElementById('analytics-table-body').innerHTML = `<tr><td colspan="7" style="color: red; text-align: center;">Falha ao carregar os dados da tabela.</td></tr>`;
+                });
+            }
 
         applyFilters() {
             this.collectFilters();
@@ -134,7 +178,6 @@ document.addEventListener('DOMContentLoaded', () => {
                 postData.append(key, this.filters[key]);
             }
 
-            // Adiciona o token CSRF
             if (typeof csrfData !== 'undefined') {
                 postData.append(csrfData.token_name, csrfData.hash);
             }
@@ -170,20 +213,76 @@ document.addEventListener('DOMContentLoaded', () => {
 
         updateAllCharts(chartData) {
             if (!chartData) return;
-            this.updateChart(this.charts.leads_by_status, chartData.leads_by_status, ['#FF6384', '#36A2EB', '#FFCE56', '#4BC0C0', '#9966FF', '#FF9F40', '#E7E9ED']);
-            this.updateChart(this.charts.leads_by_source, chartData.leads_by_source, '#667eea');
-            this.updateChart(this.charts.leads_timeline, chartData.leads_timeline, '#764ba2');
-            this.updateChart(this.charts.leads_funnel_chart, chartData.leads_by_status);
-        }
 
-        updateChart(chart, data, backgroundColor) {
-            if (!chart || !data) return;
-            chart.data.labels = data.labels;
-            chart.data.datasets[0].data = data.data;
-            chart.data.datasets[0].backgroundColor = backgroundColor;
-            chart.update();
-        }
+            // A lógica para os dados de status agora é mais elaborada
+            if (chartData.leads_by_status) {
+                const statusData = chartData.leads_by_status;
 
+                // 1. Extrai os dados e rótulos REAIS do resultado
+                const realLabels = statusData.map(item => item.label);
+                const realData = statusData.map(item => parseInt(item.data, 10));
+
+                // 2. Atualiza o gráfico de Rosca (Doughnut) com os dados REAIS
+                if (this.charts.leads_by_status) {
+                    this.charts.leads_by_status.updateOptions({
+                        series: realData,
+                        labels: realLabels
+                    });
+                }
+
+                // 3. Lógica para o Funil com formato fixo
+                if (this.charts.leads_funnel_chart) {
+                    // 3a. Gera dados "FALSOS" para criar a forma de pirâmide perfeita
+                    // Ex: [100, 85, 70, 55, 40]
+                    const fakeShapeData = [];
+                    const totalSteps = realLabels.length > 0 ? realLabels.length : 1;
+                    for (let i = 0; i < totalSteps; i++) {
+                        // Cria uma sequência descendente para a forma do funil
+                        const value = 100 - (i * (80 / totalSteps));
+                        fakeShapeData.push(value);
+                    }
+
+                    // 3b. Atualiza o gráfico de funil
+                    this.charts.leads_funnel_chart.updateOptions({
+                        // Usa os dados FALSOS para desenhar a forma
+                        series: [{
+                            data: fakeShapeData
+                        }],
+                        // Usa os rótulos REAIS
+                        xaxis: {
+                            categories: realLabels
+                        },
+                        // Usa o formatador para mostrar os dados REAIS nos rótulos
+                        dataLabels: {
+                            formatter: function(val, opt) {
+                                const seriesIndex = opt.seriesIndex;
+                                const dataPointIndex = opt.dataPointIndex;
+                                const originalValue = realData[dataPointIndex]; // Pega o valor real
+
+                                // Retorna o rótulo com o valor real
+                                return realLabels[dataPointIndex] + ':  ' + originalValue;
+                            }
+                        }
+                    });
+                }
+            }
+
+    // A lógica para os outros gráficos permanece a mesma
+    if (this.charts.leads_by_source && chartData.leads_by_source) {
+        this.charts.leads_by_source.updateOptions({
+            series: [{ data: chartData.leads_by_source.data }],
+            xaxis: { categories: chartData.leads_by_source.labels }
+        });
+    }
+    
+    if (this.charts.leads_timeline && chartData.leads_timeline) {
+        this.charts.leads_timeline.updateOptions({
+            series: [{ data: chartData.leads_timeline.data }],
+            xaxis: { categories: chartData.leads_timeline.labels }
+        });
+    }
+}
+        
         updateTable(tableData) {
             const tbody = document.getElementById('analytics-table-body');
             if (!tbody || !tableData) return;
@@ -209,5 +308,6 @@ document.addEventListener('DOMContentLoaded', () => {
             window.open(`${admin_url}lead_analytics/export_${format}?${params}`, '_blank');
         }
     }
+    
     new LeadAnalytics();
 });

@@ -21,25 +21,20 @@ class Lead_analytics extends AdminController
         $this->load->view('lead_analytics/dashboard', $data);
     }
 
-     public function get_analytics_data()
-{
-    // if (!$this->input->is_ajax_request()) {
-    //     show_404();
-    // }
+    public function get_analytics_data()
+    {
+        $filters = $this->input->post(); 
+        $filters = $this->sanitize_filters($filters);
 
-    // Altere esta linha
-    $filters = $this->input->post(); 
-    $filters = $this->sanitize_filters($filters);
+        $data = [
+            'stats'      => $this->lead_analytics_model->get_dashboard_stats($filters),
+            'charts'     => $this->lead_analytics_model->get_chart_data($filters),
+            'table_data' => $this->lead_analytics_model->get_table_data($filters, true) // Apply limit
+        ];
 
-    $data = [
-        'stats'      => $this->lead_analytics_model->get_dashboard_stats($filters),
-        'charts'     => $this->lead_analytics_model->get_chart_data($filters),
-        'table_data' => $this->lead_analytics_model->get_table_data($filters)
-    ];
-
-    header('Content-Type: application/json');
-    echo json_encode($data);
-}
+        header('Content-Type: application/json');
+        echo json_encode($data);
+    }
 
     public function export_pdf()
     {
@@ -118,10 +113,11 @@ class Lead_analytics extends AdminController
         fclose($output);
     }
     
-    private function sanitize_filters($filters)
+     private function sanitize_filters($filters)
     {
         $sanitized = [];
-        $allowed_filters = ['status', 'source', 'assigned', 'company', 'date_from', 'date_to'];
+        // A chave 'limit' foi adicionada aos filtros permitidos
+        $allowed_filters = ['status', 'source', 'assigned', 'company', 'date_from', 'date_to', 'limit'];
 
         foreach ($allowed_filters as $filter) {
             if (isset($filters[$filter]) && $filters[$filter] !== '') {

@@ -60,24 +60,48 @@
         <div class="analytics-charts">
             <div class="chart-container">
                 <div class="chart-header"><h4 class="chart-title"><?php echo _l('default_chart_leads_status'); ?></h4></div>
-                <canvas id="leads_by_status" class="chart-canvas"></canvas>
-            </div>
-            <div class="chart-container" style="grid-column: 1 / -1;">
-                <div class="chart-header"><h4 class="chart-title">Leads por Status</h4></div>
-                <canvas id="leads_funnel_chart"></canvas>
-            </div>
+                <div id="leads_by_status"></div>
+            </div>q
             <div class="chart-container">
                 <div class="chart-header"><h4 class="chart-title"><?php echo _l('default_chart_leads_source'); ?></h4></div>
-                <canvas id="leads_by_source" class="chart-canvas"></canvas>
+                <div id="leads_by_source"></div>
+            </div>
+            <div class="chart-container" style="grid-column: 1 / -1;">
+                <div class="chart-header"><h4 class="chart-title">Funil de Leads</h4></div>
+                <div id="leads_funnel_chart"></div>
             </div>
             <div class="chart-container" style="grid-column: 1 / -1;">
                 <div class="chart-header"><h4 class="chart-title"><?php echo _l('default_chart_leads_monthly'); ?></h4></div>
-                <canvas id="leads_timeline" class="chart-canvas"></canvas>
+                <div id="leads_timeline"></div>
             </div>
         </div>
 
-        <div class="analytics-table-container">
+        <!-- <div class="analytics-table-container">
             <h4><?php echo _l('showing_results'); ?></h4>
+            <div class="table-responsive">
+                <table class="table analytics-table">
+                    <thead><tr><th><?php echo _l('search_lead_name'); ?></th><th><?php echo _l('search_email'); ?></th><th><?php echo _l('search_company'); ?></th><th><?php echo _l('search_status'); ?></th><th><?php echo _l('search_source'); ?></th><th><?php echo _l('search_assigned'); ?></th><th><?php echo _l('search_date_created'); ?></th></tr></thead>
+                    <tbody id="analytics-table-body"></tbody>
+                </table>
+            </div>
+        </div> -->
+
+        <div class="analytics-table-container">
+            <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 15px;">
+                <h4><?php echo _l('showing_results'); ?></h4>
+                <div style="display: flex; align-items: center; gap: 10px;">
+                    <label for="limit-selector" style="margin: 0; font-weight: normal;"><?php echo _l('show'); ?></label>
+                    <select name="limit" id="limit-selector" class="form-control selectpicker analytics-filter" data-width="fit">
+                        <option value="10" selected>10</option>
+                        <option value="25">25</option>
+                        <option value="50">50</option>
+                        <option value="100">100</option>
+                    </select>
+                    <button id="apply-limit" class="btn btn-default" style="padding: 7px 10px; border-radius: 4px;">
+                        <i class="fa fa-refresh"></i>
+                    </button>
+                </div>
+            </div>
             <div class="table-responsive">
                 <table class="table analytics-table">
                     <thead><tr><th><?php echo _l('search_lead_name'); ?></th><th><?php echo _l('search_email'); ?></th><th><?php echo _l('search_company'); ?></th><th><?php echo _l('search_status'); ?></th><th><?php echo _l('search_source'); ?></th><th><?php echo _l('search_assigned'); ?></th><th><?php echo _l('search_date_created'); ?></th></tr></thead>

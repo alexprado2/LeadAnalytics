@@ -24,12 +24,17 @@ class Lead_analytics_model extends App_Model
         $new_leads = $this->db->get()->row()->total;
 
         // Converted
+        // $this->db->select('COUNT(id) as total')->from(db_prefix() . 'leads l');
+        // $this->db->where('l.date_converted IS NOT NULL');
+        // if($where) $this->db->where($where, null, false);
+        // $converted_leads = $this->db->get()->row()->total;
+
         $this->db->select('COUNT(id) as total')->from(db_prefix() . 'leads l');
-        $this->db->where('l.date_converted IS NOT NULL');
+        $id_do_status_vencemos = 5; // Substitua 5 pelo ID Referente ao Vencemos
+
+        $this->db->where('l.status', $id_do_status_vencemos);
         if($where) $this->db->where($where, null, false);
         $converted_leads = $this->db->get()->row()->total;
-
-        // A seção do Avg Value foi removida para evitar o erro.
 
         return [
             'total_leads'     => (int) $total_leads,
@@ -50,23 +55,22 @@ class Lead_analytics_model extends App_Model
     }
 
     private function get_leads_by_status($filters = [])
-    {
-        $where = $this->build_where_clause($filters);
-        $this->db->select('IFNULL(ls.name, "Sem Status") as label, COUNT(l.id) as data') // Corrigido (aqui o l.id é necessário para desambiguação)
-                 ->from(db_prefix() . 'leads l')
-                 ->join(db_prefix() . 'leads_status ls', 'ls.id = l.status', 'left')
-                 ->group_by('l.status')
-                 ->order_by('data', 'DESC');
-        if($where) $this->db->where($where, null, false);
-        $results = $this->db->get()->result_array();
+        {
+            $where = $this->build_where_clause($filters);
+            $this->db->select('IFNULL(ls.name, "Sem Status") as label, COUNT(l.id) as data, ls.statusorder') 
+                    ->from(db_prefix() . 'leads l')
+                    ->join(db_prefix() . 'leads_status ls', 'ls.id = l.status', 'left')
+                    ->group_by('l.status')
+                    ->order_by('ls.statusorder', 'ASC'); 
+            if($where) $this->db->where($where, null, false);
 
-        return ['labels' => array_column($results, 'label'), 'data' => array_map('intval', array_column($results, 'data'))];
-    }
+            return $this->db->get()->result_array();
+        }
 
     private function get_leads_by_source($filters = [])
     {
         $where = $this->build_where_clause($filters);
-        $this->db->select('IFNULL(lso.name, "Sem Origem") as label, COUNT(l.id) as data') // Corrigido
+        $this->db->select('IFNULL(lso.name, "Sem Origem") as label, COUNT(l.id) as data')
                  ->from(db_prefix() . 'leads l')
                  ->join(db_prefix() . 'leads_sources lso', 'lso.id = l.source', 'left')
                  ->group_by('l.source')
@@ -81,7 +85,7 @@ class Lead_analytics_model extends App_Model
     private function get_leads_timeline($filters = [])
     {
         $where = $this->build_where_clause($filters);
-        $this->db->select("DATE_FORMAT(l.dateadded, '%Y-%m') as month, COUNT(l.id) as count") // Corrigido
+        $this->db->select("DATE_FORMAT(l.dateadded, '%Y-%m') as month, COUNT(l.id) as count") 
                  ->from(db_prefix() . 'leads l')
                  ->where('l.dateadded >=', date('Y-m-d', strtotime('-12 months')))
                  ->group_by("month")
@@ -105,7 +109,7 @@ class Lead_analytics_model extends App_Model
         return ['labels' => $labels, 'data' => $data];
     }
     
-    public function get_table_data($filters = [], $limit = true)
+    public function get_table_data($filters = [], $use_limit = true)
     {
         $where = $this->build_where_clause($filters);
         $this->db->select('l.name, l.email, l.company, ls.name as status, lso.name as source, CONCAT(s.firstname, " ", s.lastname) as assigned_to, l.dateadded')
@@ -116,7 +120,11 @@ class Lead_analytics_model extends App_Model
                  ->order_by('l.dateadded', 'DESC');
 
         if($where) $this->db->where($where, null, false);
-        if($limit) $this->db->limit(100);
+        
+        if($use_limit) {
+            $limit = isset($filters['limit']) && is_numeric($filters['limit']) ? (int)$filters['limit'] : 10;
+            $this->db->limit($limit);
+        }
 
         return $this->db->get()->result_array();
     }

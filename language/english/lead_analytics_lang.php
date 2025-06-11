@@ -115,6 +115,7 @@ $lang['page'] = 'Página';
 // Misc
 $lang['all'] = 'Todos';
 $lang['select_option'] = 'Selecione uma opção';
+$lang['show'] = 'Mostrar';
 
 // Chart Defaults
 $lang['default_chart_leads_monthly'] = 'Leads por Mês';
