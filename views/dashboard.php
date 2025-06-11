@@ -76,8 +76,30 @@
             </div>
         </div>
 
-        <div class="analytics-table-container">
+        <!-- <div class="analytics-table-container">
             <h4><?php echo _l('showing_results'); ?></h4>
+            <div class="table-responsive">
+                <table class="table analytics-table">
+                    <thead><tr><th><?php echo _l('search_lead_name'); ?></th><th><?php echo _l('search_email'); ?></th><th><?php echo _l('search_company'); ?></th><th><?php echo _l('search_status'); ?></th><th><?php echo _l('search_source'); ?></th><th><?php echo _l('search_assigned'); ?></th><th><?php echo _l('search_date_created'); ?></th></tr></thead>
+                    <tbody id="analytics-table-body"></tbody>
+                </table>
+            </div>
+        </div> -->
+
+        <div class="analytics-table-container">
+            <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 15px;">
+                <h4><?php echo _l('showing_results'); ?></h4>
+                <div style="display: flex; align-items: center; gap: 10px;">
+                    <label for="limit-selector" style="margin: 0; font-weight: normal;"><?php echo _l('show'); ?></label>
+                    <select name="limit" id="limit-selector" class="form-control selectpicker analytics-filter" data-width="fit">
+                        <option value="10" selected>10</option>
+                        <option value="25">25</option>
+                        <option value="50">50</option>
+                        <option value="100">100</option>
+                    </select>
+                    <span style="margin: 0;"><?php echo _l('results'); ?></span>
+                </div>
+            </div>
             <div class="table-responsive">
                 <table class="table analytics-table">
                     <thead><tr><th><?php echo _l('search_lead_name'); ?></th><th><?php echo _l('search_email'); ?></th><th><?php echo _l('search_company'); ?></th><th><?php echo _l('search_status'); ?></th><th><?php echo _l('search_source'); ?></th><th><?php echo _l('search_assigned'); ?></th><th><?php echo _l('search_date_created'); ?></th></tr></thead>

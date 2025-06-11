@@ -26,6 +26,7 @@ document.addEventListener('DOMContentLoaded', () => {
             document.getElementById('export-pdf')?.addEventListener('click', () => this.export('pdf'));
             document.getElementById('export-excel')?.addEventListener('click', () => this.export('excel'));
             document.getElementById('export-csv')?.addEventListener('click', () => this.export('csv'));
+            document.getElementById('limit-selector')?.addEventListener('change', () => this.applyFilters());
         }
 
         initCharts() {
@@ -115,6 +116,7 @@ document.addEventListener('DOMContentLoaded', () => {
             document.querySelectorAll('.analytics-filter').forEach(el => {
                 if (el.value) this.filters[el.name] = el.value;
             });
+            
         }
 
         applyFilters() {

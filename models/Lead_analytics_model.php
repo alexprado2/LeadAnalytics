@@ -63,15 +63,14 @@ class Lead_analytics_model extends App_Model
                     ->group_by('l.status')
                     ->order_by('ls.statusorder', 'ASC'); 
             if($where) $this->db->where($where, null, false);
-            
-            // Simplesmente retorne o array de objetos completo
+
             return $this->db->get()->result_array();
         }
 
     private function get_leads_by_source($filters = [])
     {
         $where = $this->build_where_clause($filters);
-        $this->db->select('IFNULL(lso.name, "Sem Origem") as label, COUNT(l.id) as data') // Corrigido
+        $this->db->select('IFNULL(lso.name, "Sem Origem") as label, COUNT(l.id) as data')
                  ->from(db_prefix() . 'leads l')
                  ->join(db_prefix() . 'leads_sources lso', 'lso.id = l.source', 'left')
                  ->group_by('l.source')
@@ -86,7 +85,7 @@ class Lead_analytics_model extends App_Model
     private function get_leads_timeline($filters = [])
     {
         $where = $this->build_where_clause($filters);
-        $this->db->select("DATE_FORMAT(l.dateadded, '%Y-%m') as month, COUNT(l.id) as count") // Corrigido
+        $this->db->select("DATE_FORMAT(l.dateadded, '%Y-%m') as month, COUNT(l.id) as count") 
                  ->from(db_prefix() . 'leads l')
                  ->where('l.dateadded >=', date('Y-m-d', strtotime('-12 months')))
                  ->group_by("month")
@@ -110,7 +109,7 @@ class Lead_analytics_model extends App_Model
         return ['labels' => $labels, 'data' => $data];
     }
     
-    public function get_table_data($filters = [], $limit = true)
+    public function get_table_data($filters = [], $use_limit = true)
     {
         $where = $this->build_where_clause($filters);
         $this->db->select('l.name, l.email, l.company, ls.name as status, lso.name as source, CONCAT(s.firstname, " ", s.lastname) as assigned_to, l.dateadded')
@@ -121,7 +120,11 @@ class Lead_analytics_model extends App_Model
                  ->order_by('l.dateadded', 'DESC');
 
         if($where) $this->db->where($where, null, false);
-        if($limit) $this->db->limit(10);
+        
+        if($use_limit) {
+            $limit = isset($filters['limit']) && is_numeric($filters['limit']) ? (int)$filters['limit'] : 10;
+            $this->db->limit($limit);
+        }
 
         return $this->db->get()->result_array();
     }
