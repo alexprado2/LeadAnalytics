@@ -26,7 +26,7 @@ document.addEventListener('DOMContentLoaded', () => {
             document.getElementById('export-pdf')?.addEventListener('click', () => this.export('pdf'));
             document.getElementById('export-excel')?.addEventListener('click', () => this.export('excel'));
             document.getElementById('export-csv')?.addEventListener('click', () => this.export('csv'));
-            document.getElementById('limit-selector')?.addEventListener('change', () => this.applyFilters());
+           document.getElementById('apply-limit')?.addEventListener('click', () => this.loadTableDataOnly());
         }
 
         initCharts() {
@@ -112,12 +112,48 @@ document.addEventListener('DOMContentLoaded', () => {
         }
         
         collectFilters() {
-            this.filters = {};
-            document.querySelectorAll('.analytics-filter').forEach(el => {
-                if (el.value) this.filters[el.name] = el.value;
-            });
-            
-        }
+                this.filters = {};
+                // Usando jQuery para ser mais compatível com a biblioteca selectpicker
+                $('.analytics-filter').each((index, el) => {
+                    // Usar $(el).val() é mais confiável para ler o valor de um selectpicker
+                    const value = $(el).val(); 
+                    if (value && value !== '') {
+                        this.filters[el.name] = Array.isArray(value) ? value.join(',') : value;
+                    }
+                });
+            }
+
+            loadTableDataOnly() {
+                this.collectFilters(); // Coleta todos os filtros atuais, incluindo o novo limite
+
+                const postData = new FormData();
+                for (const key in this.filters) {
+                    postData.append(key, this.filters[key]);
+                }
+
+                if (typeof csrfData !== 'undefined') {
+                    postData.append(csrfData.token_name, csrfData.hash);
+                }
+
+                fetch(`${admin_url}lead_analytics/get_analytics_data`, {
+                    method: 'POST',
+                    body: postData
+                })
+                .then(res => {
+                    if (!res.ok) {
+                        return res.text().then(text => { throw new Error(text) });
+                    }
+                    return res.json();
+                })
+                .then(data => {
+                    // A diferença chave está aqui: apenas a tabela é atualizada
+                    this.updateTable(data.table_data);
+                })
+                .catch(err => {
+                    console.error('Error loading table data:', err);
+                    document.getElementById('analytics-table-body').innerHTML = `<tr><td colspan="7" style="color: red; text-align: center;">Falha ao carregar os dados da tabela.</td></tr>`;
+                });
+            }
 
         applyFilters() {
             this.collectFilters();

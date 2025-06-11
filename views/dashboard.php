@@ -97,7 +97,9 @@
                         <option value="50">50</option>
                         <option value="100">100</option>
                     </select>
-                    <span style="margin: 0;"><?php echo _l('results'); ?></span>
+                    <button id="apply-limit" class="btn btn-default" style="padding: 7px 10px; border-radius: 4px;">
+                        <i class="fa fa-refresh"></i>
+                    </button>
                 </div>
             </div>
             <div class="table-responsive">
