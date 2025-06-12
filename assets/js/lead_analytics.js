@@ -60,40 +60,51 @@ document.addEventListener('DOMContentLoaded', () => {
 
             // Gráfico de Funil
             const funnelOptions = {
-        series: [{ name: 'Leads', data: [] }],
-        chart: {
-            type: 'bar', // Mudamos o tipo para 'bar'
-            height: 350,
-            fontFamily: 'inherit'
-        },
-        plotOptions: {
-            bar: {
-                horizontal: true,
-                isFunnel: true, // Usamos a opção especial isFunnel
-                borderRadius: 0,
-                barHeight: '80%',
-            },
-        },
-        dataLabels: {
-            enabled: true,
-            formatter: function(val, opt) {
-                // Os rótulos virão do eixo X (xaxis) neste caso
-                return opt.w.globals.labels[opt.dataPointIndex] + ':  ' + val
-            },
-            dropShadow: {
-                enabled: true,
-            },
-        },
-        // Para o gráfico de barras, os rótulos ficam em xaxis.categories
-        xaxis: {
-            categories: [],
-        },
-        legend: {
-            show: false,
-        }
-    };
-    this.charts.leads_funnel_chart = new ApexCharts(document.querySelector("#leads_funnel_chart"), funnelOptions);
-    this.charts.leads_funnel_chart.render();
+                chart: {
+                    type: 'bar',
+                    height: 500,
+                    fontFamily: 'inherit',
+                },
+                tooltip: {
+                    enabled: false
+                },
+                plotOptions: {
+                    bar: {
+                        horizontal: true,
+                        isFunnel: true,
+                        borderRadius: 0,
+                        barHeight: '80%',
+                        dataLabels: {
+                            position: 'center' 
+                        }
+                    },
+                },
+                dataLabels: {
+                    enabled: true,
+                    formatter: function(val) {
+                      return val;
+                    },
+                    offsetY: -15,
+                    style: {
+                        fontSize: '12px',
+                        fontWeight: 'bold',
+                        colors: ['#fff']
+                    },
+                    dropShadow: {
+                        enabled: true,
+                        top: 1, left: 1, blur: 1, opacity: 0.5
+                    }
+                },
+                series: [{ name: 'Leads', data: [] }],
+                xaxis: {
+                    categories: [],
+                },
+                legend: {
+                    show: false,
+                }
+            };
+            this.charts.leads_funnel_chart = new ApexCharts(document.querySelector("#leads_funnel_chart"), funnelOptions);
+            this.charts.leads_funnel_chart.render();
 
             // Gráfico de Fonte (Barras)
             const sourceOptions = {
@@ -123,7 +134,6 @@ document.addEventListener('DOMContentLoaded', () => {
             this.filters = {};
             // Usando jQuery para ser mais compatível com a biblioteca selectpicker
             $('.analytics-filter').each((index, el) => {
-                // Usar $(el).val() é mais confiável para ler o valor de um selectpicker
                 const value = $(el).val(); 
                 if (value && value !== '') {
                     this.filters[el.name] = Array.isArray(value) ? value.join(',') : value;
@@ -149,7 +159,7 @@ document.addEventListener('DOMContentLoaded', () => {
         }
         
         loadTableDataOnly() {
-                this.collectFilters(); // Coleta todos os filtros atuais, incluindo o novo limite
+                this.collectFilters();
 
                 const postData = new FormData();
                 for (const key in this.filters) {
@@ -171,7 +181,6 @@ document.addEventListener('DOMContentLoaded', () => {
                     return res.json();
                 })
                 .then(data => {
-                    // A diferença chave está aqui: apenas a tabela é atualizada
                     this.updateTable(data.table_data);
                 })
                 .catch(err => {
@@ -218,78 +227,101 @@ document.addEventListener('DOMContentLoaded', () => {
             document.getElementById('converted-leads').textContent = stats.converted_leads || 0;
             document.getElementById('conversion-rate').textContent = `${stats.conversion_rate || 0}%`;
         }
+        
+        formatCurrency(value) {
+            const number = parseFloat(value) || 0;
+            return number.toLocaleString('pt-BR', { style: 'currency', currency: 'BRL' });
+        }
 
         updateAllCharts(chartData) {
             if (!chartData) return;
         
-            // A lógica para os dados de status agora é mais elaborada
-            if (chartData.leads_by_status) {
-                const statusData = chartData.leads_by_status;
+            // Gráfico de Status (Doughnut) - Usa a contagem de leads
+            if (chartData.leads_by_status && this.charts.leads_by_status) {
+                const statusCountData = chartData.leads_by_status;
+                this.charts.leads_by_status.updateOptions({
+                    series: statusCountData.map(item => parseInt(item.data, 10)),
+                    labels: statusCountData.map(item => item.label)
+                });
+            }
         
-                // 1. Extrai os dados e rótulos REAIS do resultado
-                const realLabels = statusData.map(item => item.label);
-                const realData = statusData.map(item => parseInt(item.data, 10));
+            // Gráfico de Funil - Exibe nome do status, contagem e valor no rótulo de dados
+            if (chartData.leads_by_status && chartData.leads_value_by_status && this.charts.leads_funnel_chart) {
+                const statusCountData = chartData.leads_by_status;
+                const statusValueData = chartData.leads_value_by_status;
         
-                // 2. Atualiza o gráfico de Rosca (Doughnut) com os dados REAIS
-                if (this.charts.leads_by_status) {
-                    this.charts.leads_by_status.updateOptions({
-                        series: realData,
-                        labels: realLabels
-                    });
+                const funnelLabels = statusValueData.map(item => item.label);
+                const funnelCountSeries = statusCountData.map(item => parseInt(item.data, 10));
+                const funnelValueSeries = statusValueData.map(item => parseFloat(item.data));
+        
+                // A forma do funil ainda é baseada na contagem para representar a progressão
+                const shapeData = [];
+                const totalSteps = funnelLabels.length > 0 ? funnelLabels.length : 1;
+                for (let i = 0; i < totalSteps; i++) {
+                    const value = 100 - (i * (80 / totalSteps));
+                    shapeData.push(value);
                 }
         
-                // 3. Lógica para o Funil com formato fixo
-                if (this.charts.leads_funnel_chart) {
-                    // 3a. Gera dados "FALSOS" para criar a forma de pirâmide perfeita
-                    // Ex: [100, 85, 70, 55, 40]
-                    const fakeShapeData = [];
-                    const totalSteps = realLabels.length > 0 ? realLabels.length : 1;
-                    for (let i = 0; i < totalSteps; i++) {
-                        // Cria uma sequência descendente para a forma do funil
-                        const value = 100 - (i * (80 / totalSteps));
-                        fakeShapeData.push(value);
-                    }
-        
-                    // 3b. Atualiza o gráfico de funil
-                    this.charts.leads_funnel_chart.updateOptions({
-                        // Usa os dados FALSOS para desenhar a forma
-                        series: [{
-                            data: fakeShapeData
-                        }],
-                        // Usa os rótulos REAIS
-                        xaxis: {
-                            categories: realLabels
+                this.charts.leads_funnel_chart.updateOptions({
+                    series: [{ data: shapeData }],
+                    xaxis: {
+                        categories: funnelLabels,
+                        labels: {
+                            show: false
                         },
-                        // Usa o formatador para mostrar os dados REAIS nos rótulos
-                        dataLabels: {
-                            formatter: function(val, opt) {
-                                const seriesIndex = opt.seriesIndex;
-                                const dataPointIndex = opt.dataPointIndex;
-                                const originalValue = realData[dataPointIndex]; // Pega o valor real
-        
-                                // Retorna o rótulo com o valor real
-                                return realLabels[dataPointIndex] + ':  ' + originalValue;
+                        axisTicks: {
+                            show: false
+                        }
+                    },
+                    plotOptions: {
+                        bar: {
+                            dataLabels: {
+                                position: 'center'
                             }
                         }
-                    });
-                }
+                    },
+                    dataLabels: {
+                        enabled: true,
+                        formatter: (val, opt) => {
+                            const dataPointIndex = opt.dataPointIndex;
+                            const label = funnelLabels[dataPointIndex];
+                            const leadCount = funnelCountSeries[dataPointIndex];
+                            const leadValue = funnelValueSeries[dataPointIndex];
+                            
+                            // Retorna um array de strings para criar múltiplas linhas
+                            return [
+                                `${label} - ${leadCount} Lead(s)`,
+                                `${this.formatCurrency(leadValue)}`
+                            ];
+                        },
+                        style: {
+                            colors: ['#fff'], // Cor branca para melhor contraste
+                            fontSize: '12px',
+                            fontWeight: 'bold',
+                        },
+                        dropShadow: {
+                            enabled: true,
+                            top: 1, left: 1, blur: 1, opacity: 0.5
+                        }
+                    }
+                });
             }
-
-    // A lógica para os outros gráficos permanece a mesma
-    if (this.charts.leads_by_source && chartData.leads_by_source) {
-        this.charts.leads_by_source.updateOptions({
-            series: [{ data: chartData.leads_by_source.data }],
-            xaxis: { categories: chartData.leads_by_source.labels }
-        });
-    }
-    
-    if (this.charts.leads_timeline && chartData.leads_timeline) {
-        this.charts.leads_timeline.updateOptions({
-            series: [{ data: chartData.leads_timeline.data }],
-            xaxis: { categories: chartData.leads_timeline.labels }
-        });
-    }
-}
+        
+            // Outros gráficos
+            if (this.charts.leads_by_source && chartData.leads_by_source) {
+                this.charts.leads_by_source.updateOptions({
+                    series: [{ data: chartData.leads_by_source.data }],
+                    xaxis: { categories: chartData.leads_by_source.labels }
+                });
+            }
+            
+            if (this.charts.leads_timeline && chartData.leads_timeline) {
+                this.charts.leads_timeline.updateOptions({
+                    series: [{ data: chartData.leads_timeline.data }],
+                    xaxis: { categories: chartData.leads_timeline.labels }
+                });
+            }
+        }
         
         updateTable(tableData) {
             const tbody = document.getElementById('analytics-table-body');
