@@ -49,7 +49,7 @@ class Lead_analytics extends AdminController
         $data['stats']       = $this->lead_analytics_model->get_dashboard_stats($filters);
         $data['table_data']  = $this->lead_analytics_model->get_table_data($filters, false); // Get all data
         
-        $this->load->library('pdf');
+        $this->load->library('lead_analytics/pdf');
         $view = $this->load->view('lead_analytics/pdf_export', $data, true);
         $this->pdf->WriteHTML($view);
         $this->pdf->Output(_l('lead_analytics') . '_report.pdf', 'D');

@@ -24,13 +24,8 @@ class Lead_analytics_model extends App_Model
         $new_leads = $this->db->get()->row()->total;
 
         // Converted
-        // $this->db->select('COUNT(id) as total')->from(db_prefix() . 'leads l');
-        // $this->db->where('l.date_converted IS NOT NULL');
-        // if($where) $this->db->where($where, null, false);
-        // $converted_leads = $this->db->get()->row()->total;
-
         $this->db->select('COUNT(id) as total')->from(db_prefix() . 'leads l');
-        $id_do_status_vencemos = 5; // Substitua 5 pelo ID Referente ao Vencemos
+        $id_do_status_vencemos = 1; // Substitua pelo ID Referente ao Vencemos
 
         $this->db->where('l.status', $id_do_status_vencemos);
         if($where) $this->db->where($where, null, false);
@@ -41,31 +36,45 @@ class Lead_analytics_model extends App_Model
             'new_leads'       => (int) $new_leads,
             'converted_leads' => (int) $converted_leads,
             'conversion_rate' => $total_leads > 0 ? round(($converted_leads / $total_leads) * 100, 2) : 0,
-            'avg_lead_value'  => 0, // Retornando 0 para manter a consistência.
+            'avg_lead_value'  => 0, 
         ];
     }
 
     public function get_chart_data($filters = [])
     {
         return [
-            'leads_by_status'  => $this->get_leads_by_status($filters),
-            'leads_by_source'  => $this->get_leads_by_source($filters),
-            'leads_timeline'   => $this->get_leads_timeline($filters),
+            'leads_by_status'        => $this->get_leads_by_status($filters),
+            'leads_value_by_status'  => $this->get_leads_value_by_status($filters),
+            'leads_by_source'        => $this->get_leads_by_source($filters),
+            'leads_timeline'         => $this->get_leads_timeline($filters),
         ];
+    }
+    
+    private function get_leads_value_by_status($filters = [])
+    {
+        $where = $this->build_where_clause($filters);
+        $this->db->select('IFNULL(ls.name, "Sem Status") as label, SUM(l.lead_value) as data, ls.statusorder') 
+                ->from(db_prefix() . 'leads l')
+                ->join(db_prefix() . 'leads_status ls', 'ls.id = l.status', 'left')
+                ->group_by('l.status')
+                ->order_by('ls.statusorder', 'ASC'); 
+        if($where) $this->db->where($where, null, false);
+
+        return $this->db->get()->result_array();
     }
 
     private function get_leads_by_status($filters = [])
-        {
-            $where = $this->build_where_clause($filters);
-            $this->db->select('IFNULL(ls.name, "Sem Status") as label, COUNT(l.id) as data, ls.statusorder') 
-                    ->from(db_prefix() . 'leads l')
-                    ->join(db_prefix() . 'leads_status ls', 'ls.id = l.status', 'left')
-                    ->group_by('l.status')
-                    ->order_by('ls.statusorder', 'ASC'); 
-            if($where) $this->db->where($where, null, false);
+    {
+        $where = $this->build_where_clause($filters);
+        $this->db->select('IFNULL(ls.name, "Sem Status") as label, COUNT(l.id) as data, ls.statusorder') 
+                ->from(db_prefix() . 'leads l')
+                ->join(db_prefix() . 'leads_status ls', 'ls.id = l.status', 'left')
+                ->group_by('l.status')
+                ->order_by('ls.statusorder', 'ASC'); 
+        if($where) $this->db->where($where, null, false);
 
-            return $this->db->get()->result_array();
-        }
+        return $this->db->get()->result_array();
+    }
 
     private function get_leads_by_source($filters = [])
     {
