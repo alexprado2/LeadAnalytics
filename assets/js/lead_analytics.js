@@ -295,7 +295,7 @@ document.addEventListener('DOMContentLoaded', () => {
                             ];
                         },
                         style: {
-                            colors: ['#fff'], // Cor branca para melhor contraste
+                            colors: ['#fff'],
                             fontSize: '12px',
                             fontWeight: 'bold',
                         },

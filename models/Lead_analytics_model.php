@@ -25,7 +25,7 @@ class Lead_analytics_model extends App_Model
 
         // Converted
         $this->db->select('COUNT(id) as total')->from(db_prefix() . 'leads l');
-        $id_do_status_vencemos = 5; // Substitua 5 pelo ID Referente ao Vencemos
+        $id_do_status_vencemos = 1; // Substitua pelo ID Referente ao Vencemos
 
         $this->db->where('l.status', $id_do_status_vencemos);
         if($where) $this->db->where($where, null, false);
@@ -36,7 +36,7 @@ class Lead_analytics_model extends App_Model
             'new_leads'       => (int) $new_leads,
             'converted_leads' => (int) $converted_leads,
             'conversion_rate' => $total_leads > 0 ? round(($converted_leads / $total_leads) * 100, 2) : 0,
-            'avg_lead_value'  => 0, // Retornando 0 para manter a consistência.
+            'avg_lead_value'  => 0, 
         ];
     }
 
