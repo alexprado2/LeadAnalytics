@@ -60,32 +60,40 @@ document.addEventListener('DOMContentLoaded', () => {
 
             // Gráfico de Funil
             const funnelOptions = {
-                 ...defaultOptions,
-                chart: { ...defaultOptions.chart, type: 'funnel' },
-                series: [{ name: 'Leads', data: [] }],
-                plotOptions: {
-                    funnel: {
-                        shape: 'pyramid', // <-- ESSA É A OPÇÃO PARA O FORMATO DE PIRÂMIDE
-                        distributed: true,
-                    }
-                },
-                labels: [],
-                dataLabels: {
-                    enabled: true,
-                    formatter: function (val, opt) {
-                        // Mostra o nome do status e o valor
-                        return opt.w.globals.labels[opt.dataPointIndex] + ':  ' + val;
-                    },
-                    dropShadow: {
-                        enabled: true
-                    }
-                },
-                legend: { 
-                    show: false // A legenda é redundante neste tipo de gráfico
-                }
-            };
-            this.charts.leads_funnel_chart = new ApexCharts(document.querySelector("#leads_funnel_chart"), funnelOptions);
-            this.charts.leads_funnel_chart.render();
+        series: [{ name: 'Leads', data: [] }],
+        chart: {
+            type: 'bar', // Mudamos o tipo para 'bar'
+            height: 350,
+            fontFamily: 'inherit'
+        },
+        plotOptions: {
+            bar: {
+                horizontal: true,
+                isFunnel: true, // Usamos a opção especial isFunnel
+                borderRadius: 0,
+                barHeight: '80%',
+            },
+        },
+        dataLabels: {
+            enabled: true,
+            formatter: function(val, opt) {
+                // Os rótulos virão do eixo X (xaxis) neste caso
+                return opt.w.globals.labels[opt.dataPointIndex] + ':  ' + val
+            },
+            dropShadow: {
+                enabled: true,
+            },
+        },
+        // Para o gráfico de barras, os rótulos ficam em xaxis.categories
+        xaxis: {
+            categories: [],
+        },
+        legend: {
+            show: false,
+        }
+    };
+    this.charts.leads_funnel_chart = new ApexCharts(document.querySelector("#leads_funnel_chart"), funnelOptions);
+    this.charts.leads_funnel_chart.render();
 
             // Gráfico de Fonte (Barras)
             const sourceOptions = {
@@ -112,18 +120,35 @@ document.addEventListener('DOMContentLoaded', () => {
         }
         
         collectFilters() {
-                this.filters = {};
-                // Usando jQuery para ser mais compatível com a biblioteca selectpicker
-                $('.analytics-filter').each((index, el) => {
-                    // Usar $(el).val() é mais confiável para ler o valor de um selectpicker
-                    const value = $(el).val(); 
-                    if (value && value !== '') {
-                        this.filters[el.name] = Array.isArray(value) ? value.join(',') : value;
-                    }
-                });
-            }
+            this.filters = {};
+            // Usando jQuery para ser mais compatível com a biblioteca selectpicker
+            $('.analytics-filter').each((index, el) => {
+                // Usar $(el).val() é mais confiável para ler o valor de um selectpicker
+                const value = $(el).val(); 
+                if (value && value !== '') {
+                    this.filters[el.name] = Array.isArray(value) ? value.join(',') : value;
+                }
+            });
+        }
 
-            loadTableDataOnly() {
+        applyFilters() {
+            this.collectFilters();
+            this.loadData();
+        }
+
+        clearFilters() {
+            document.querySelectorAll('.analytics-filter').forEach(el => {
+                if (el.tagName === 'SELECT') {
+                    $(el).selectpicker('val', '');
+                } else {
+                    el.value = '';
+                }
+            });
+            this.filters = {};
+            this.loadData();
+        }
+        
+        loadTableDataOnly() {
                 this.collectFilters(); // Coleta todos os filtros atuais, incluindo o novo limite
 
                 const postData = new FormData();
@@ -154,23 +179,6 @@ document.addEventListener('DOMContentLoaded', () => {
                     document.getElementById('analytics-table-body').innerHTML = `<tr><td colspan="7" style="color: red; text-align: center;">Falha ao carregar os dados da tabela.</td></tr>`;
                 });
             }
-
-        applyFilters() {
-            this.collectFilters();
-            this.loadData();
-        }
-
-        clearFilters() {
-            document.querySelectorAll('.analytics-filter').forEach(el => {
-                if (el.tagName === 'SELECT') {
-                    $(el).selectpicker('val', '');
-                } else {
-                    el.value = '';
-                }
-            });
-            this.filters = {};
-            this.loadData();
-        }
 
         loadData() {
             const postData = new FormData();
@@ -213,15 +221,15 @@ document.addEventListener('DOMContentLoaded', () => {
 
         updateAllCharts(chartData) {
             if (!chartData) return;
-
+        
             // A lógica para os dados de status agora é mais elaborada
             if (chartData.leads_by_status) {
                 const statusData = chartData.leads_by_status;
-
+        
                 // 1. Extrai os dados e rótulos REAIS do resultado
                 const realLabels = statusData.map(item => item.label);
                 const realData = statusData.map(item => parseInt(item.data, 10));
-
+        
                 // 2. Atualiza o gráfico de Rosca (Doughnut) com os dados REAIS
                 if (this.charts.leads_by_status) {
                     this.charts.leads_by_status.updateOptions({
@@ -229,7 +237,7 @@ document.addEventListener('DOMContentLoaded', () => {
                         labels: realLabels
                     });
                 }
-
+        
                 // 3. Lógica para o Funil com formato fixo
                 if (this.charts.leads_funnel_chart) {
                     // 3a. Gera dados "FALSOS" para criar a forma de pirâmide perfeita
@@ -241,7 +249,7 @@ document.addEventListener('DOMContentLoaded', () => {
                         const value = 100 - (i * (80 / totalSteps));
                         fakeShapeData.push(value);
                     }
-
+        
                     // 3b. Atualiza o gráfico de funil
                     this.charts.leads_funnel_chart.updateOptions({
                         // Usa os dados FALSOS para desenhar a forma
@@ -258,7 +266,7 @@ document.addEventListener('DOMContentLoaded', () => {
                                 const seriesIndex = opt.seriesIndex;
                                 const dataPointIndex = opt.dataPointIndex;
                                 const originalValue = realData[dataPointIndex]; // Pega o valor real
-
+        
                                 // Retorna o rótulo com o valor real
                                 return realLabels[dataPointIndex] + ':  ' + originalValue;
                             }

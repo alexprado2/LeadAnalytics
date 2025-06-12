@@ -91,7 +91,7 @@
                 <h4><?php echo _l('showing_results'); ?></h4>
                 <div style="display: flex; align-items: center; gap: 10px;">
                     <label for="limit-selector" style="margin: 0; font-weight: normal;"><?php echo _l('show'); ?></label>
-                    <select name="limit" id="limit-selector" class="form-control selectpicker analytics-filter" data-width="fit">
+                    <select name="limit" id="limit-selector" class="form-control analytics-filter" data-width="fit">
                         <option value="10" selected>10</option>
                         <option value="25">25</option>
                         <option value="50">50</option>
