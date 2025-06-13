@@ -339,13 +339,66 @@ document.addEventListener('DOMContentLoaded', () => {
             `).join('');
         }
         
-        export(format) {
-             if (!has_permission('leads', 'export')) {
+        async export(format) {
+            // Mantém o comportamento antigo para CSV e Excel
+            if (format !== 'pdf') {
+                const params = new URLSearchParams(this.filters).toString();
+                window.open(`${admin_url}lead_analytics/export_${format}?${params}`, '_blank');
+                return;
+            }
+
+            // Apenas para PDF, verifica a permissão
+            if (!has_permission('leads', 'export')) {
                 alert('Você não tem permissão para exportar.');
                 return;
             }
-            const params = new URLSearchParams(this.filters).toString();
-            window.open(`${admin_url}lead_analytics/export_${format}?${params}`, '_blank');
+    
+            // alert('Preparando seu relatório em PDF com os gráficos. Isso pode levar alguns segundos...');
+    
+            try {
+                // 1. Gera as imagens dos gráficos
+                const statusChartImg = await this.charts.leads_by_status.dataURI();
+                const funnelChartImg = await this.charts.leads_funnel_chart.dataURI();
+                const sourceChartImg = await this.charts.leads_by_source.dataURI();
+                const timelineChartImg = await this.charts.leads_timeline.dataURI();
+    
+                // 2. Cria um formulário oculto para enviar os dados
+                const form = document.createElement('form');
+                form.method = 'POST';
+                form.action = `${admin_url}lead_analytics/export_pdf`;
+                form.target = '_blank'; // Abre em uma nova aba
+                form.style.display = 'none';
+    
+                // 3. Adiciona os filtros e as imagens ao formulário
+                const formData = {
+                    ...this.filters,
+                    status_chart: statusChartImg.imgURI,
+                    funnel_chart: funnelChartImg.imgURI,
+                    source_chart: sourceChartImg.imgURI,
+                    timeline_chart: timelineChartImg.imgURI,
+                };
+    
+                if (typeof csrfData !== 'undefined') {
+                    formData[csrfData.token_name] = csrfData.hash;
+                }
+    
+                for (const key in formData) {
+                    const input = document.createElement('input');
+                    input.type = 'hidden';
+                    input.name = key;
+                    input.value = formData[key];
+                    form.appendChild(input);
+                }
+    
+                // 4. Envia o formulário
+                document.body.appendChild(form);
+                form.submit();
+                document.body.removeChild(form);
+    
+            } catch (error) {
+                console.error('Erro ao exportar gráficos para PDF:', error);
+                alert('Ocorreu um erro ao gerar os gráficos para o PDF. Verifique o console para mais detalhes.');
+            }
         }
     }
     

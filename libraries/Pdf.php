@@ -3,10 +3,6 @@ if (!defined('BASEPATH')) {
     exit('No direct script access allowed');
 }
 
-/**
- * Carrega o autoloader da biblioteca mPDF.
- * Este é o método correto para garantir que todas as dependências do mPDF sejam carregadas.
- */
 require_once(__DIR__ . '/../vendor/autoload.php');
 
 use Mpdf\Mpdf;
