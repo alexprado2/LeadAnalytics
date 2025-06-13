@@ -6,9 +6,8 @@ if (!defined('BASEPATH')) {
 /**
  * Carrega o autoloader da biblioteca mPDF.
  * Este é o método correto para garantir que todas as dependências do mPDF sejam carregadas.
- * O caminho assume que a biblioteca mPDF está em 'lead_analytics/vendor/mpdf/'
  */
-require_once(__DIR__ . '/../vendor/mpdf/vendor/autoload.php');
+require_once(__DIR__ . '/../vendor/autoload.php');
 
 use Mpdf\Mpdf;
 
