@@ -42,12 +42,23 @@ class Lead_analytics extends AdminController
             access_denied('leads');
         }
 
-        $filters = $this->input->get(null, true);
+        $post_data = $this->input->post(null, false);
+
+        $filters = $post_data;
+        unset($filters['status_chart'], $filters['funnel_chart'], $filters['source_chart'], $filters['timeline_chart']);
+        
         $filters = $this->sanitize_filters($filters);
 
         $data['title']       = _l('lead_analytics') . ' ' . _l('reports');
         $data['stats']       = $this->lead_analytics_model->get_dashboard_stats($filters);
-        $data['table_data']  = $this->lead_analytics_model->get_table_data($filters, false); // Get all data
+        $data['table_data']  = $this->lead_analytics_model->get_table_data($filters, false);
+
+        $data['charts'] = [
+            'status_chart'   => $post_data['status_chart'] ?? '',
+            'funnel_chart'   => $post_data['funnel_chart'] ?? '',
+            'source_chart'   => $post_data['source_chart'] ?? '',
+            'timeline_chart' => $post_data['timeline_chart'] ?? '',
+        ];
         
         $this->load->library('lead_analytics/pdf');
         $view = $this->load->view('lead_analytics/pdf_export', $data, true);
